@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Map, Car, Factory, FileText, LogOut, ShieldCheck } from 'lucide-react';
 import Reports from './pages/Reports';
+import Vehicle from './pages/Vehicle';
 const Placeholder = ({ title, developer }) => (
 <div className="flex items-center justify-center h-full min-h-screen bg-gray-50">
 <div className="text-center">
@@ -66,7 +67,7 @@ function App() {
           
 <Route path="/" element={<Placeholder title="Dashboard" developer="Faith" />} />
 <Route path="/location" element={<Placeholder title="Location Tracking" developer="Watiri" />} />
-<Route path="/vehicle" element={<Placeholder title="Vehicle Emission" developer="Jackie" />} />
+<Route path="/vehicle" element={<Vehicle />} />
 <Route path="/industrial" element={<Placeholder title="Industrial Emission Monitoring" developer="Berlin" />} />
 <Route path="/login" element={<Placeholder title="Login & Authentication" developer="Mercy" />} />
 <Route path="/reports" element={<Reports />} />
