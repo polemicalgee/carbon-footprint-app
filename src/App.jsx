@@ -4,6 +4,8 @@ import { LayoutDashboard, Map, Car, Factory, FileText, LogOut, ShieldCheck } fro
 import Reports from './pages/Reports';
 import login from './pages/auth/login';
 import Register from ' ./pages/auth/register'; 
+import Vehicle from './pages/Vehicle';
+import LocationTrackingPage from "./pages/LocationTrackingPage";
 const Placeholder = ({ title, developer }) => (
 <div className="flex items-center justify-center h-full min-h-screen bg-gray-50">
 <div className="text-center">
@@ -66,8 +68,8 @@ function App() {
 <Routes>
           
 <Route path="/" element={<Placeholder title="Dashboard" developer="Faith" />} />
-<Route path="/location" element={<Placeholder title="Location Tracking" developer="Watiri" />} />
-<Route path="/vehicle" element={<Placeholder title="Vehicle Emission" developer="Jackie" />} />
+<Route path="/location" element={<LocationTrackingPage />} />
+<Route path="/vehicle" element={<Vehicle />} />
 <Route path="/industrial" element={<Placeholder title="Industrial Emission Monitoring" developer="Berlin" />} />
 <Route path="/login" element={<Auth/>} />
 <Route path="/reports" element={<Reports />} />
