@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Map, Car, Factory, FileText, LogOut, ShieldCheck } from 'lucide-react';
 import Reports from './pages/Reports';
+import login from './pages/auth/login';
+import Register from ' ./pages/auth/register'; 
 import Vehicle from './pages/Vehicle';
 import LocationTrackingPage from "./pages/LocationTrackingPage";
 const Placeholder = ({ title, developer }) => (
@@ -13,7 +15,6 @@ Under Construction by: <span className="font-semibold text-green-600">{developer
 </p>
 </div>
 </div>
-);
 
 const Sidebar = () => {
 const location = useLocation();
@@ -70,7 +71,7 @@ function App() {
 <Route path="/location" element={<LocationTrackingPage />} />
 <Route path="/vehicle" element={<Vehicle />} />
 <Route path="/industrial" element={<Placeholder title="Industrial Emission Monitoring" developer="Berlin" />} />
-<Route path="/login" element={<Placeholder title="Login & Authentication" developer="Mercy" />} />
+<Route path="/login" element={<Auth/>} />
 <Route path="/reports" element={<Reports />} />
 </Routes>
 </main>
