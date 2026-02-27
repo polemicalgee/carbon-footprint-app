@@ -1,7 +1,7 @@
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
-function Reports() {
+function Analytics() {
   return (
     <div className="flex h-screen">
       <Sidebar />
@@ -10,9 +10,9 @@ function Reports() {
         <Navbar />
 
         <div className="p-8">
-          <h2 className="text-2xl font-bold">Reports Page</h2>
+          <h2 className="text-2xl font-bold">Analytics Page</h2>
           <p className="text-gray-600 mt-2">
-            Download emission reports and history here.
+            AI insights and trends will appear here.
           </p>
         </div>
       </div>
@@ -20,4 +20,4 @@ function Reports() {
   );
 }
 
-export default Reports;
+export default Analytics;
