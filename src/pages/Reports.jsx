@@ -2,8 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { FileText, Download, Filter, AlertCircle, CheckCircle, Search, ArrowUpDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useTheme } from '../context/ThemeContext';
 
 const Reports = () => {
+  const { isDark } = useTheme();
+
   const reportData = [
     { id: 1, date: "2026-02-18", type: "Vehicle", emission: 12.5, status: "High", location: "Mombasa Rd" },
     { id: 2, date: "2026-02-17", type: "Industrial", emission: 45.2, status: "Critical", location: "Factory Zone A" },
@@ -24,49 +27,50 @@ const Reports = () => {
     setSortConfig({ key, direction });
   };
 
-const processedData = useMemo(() => {
-let filtered = reportData.filter((item) => {
-const matchesSearch = item.location.toLowerCase().includes(searchTerm.toLowerCase()) || 
-item.type.toLowerCase().includes(searchTerm.toLowerCase());
-const matchesStatus = statusFilter === "All" || item.status === statusFilter;
-return matchesSearch && matchesStatus;
-});
+  const processedData = useMemo(() => {
+    let filtered = reportData.filter((item) => {
+      const matchesSearch = item.location.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      item.type.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "All" || item.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
 
-filtered.sort((a, b) => {
-if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
-return 0;
-});
+    filtered.sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
 
-  return filtered;
-}, [reportData, searchTerm, statusFilter, sortConfig]);
-const downloadPDF = () => {
-const doc = new jsPDF();
-doc.setFontSize(18);
-doc.text("CarbonWise - Emission Report", 14, 22);
-doc.setFontSize(11);
-doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-doc.text(`Applied Filters - Status: ${statusFilter}`, 14, 36);
+    return filtered;
+  }, [reportData, searchTerm, statusFilter, sortConfig]);
 
-doc.autoTable({
-startY: 45,
-head: [['Date', 'Type', 'Location', 'Emission (kg)', 'Status']],
-body: processedData.map(item => [item.date, item.type, item.location, item.emission, item.status]),
-theme: 'grid',
-headStyles: { fillColor: [22, 163, 74] },
-alternateRowStyles: { fillColor: [240, 240, 240] },
-});
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("CarbonWise - Emission Report", 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    doc.text(`Applied Filters - Status: ${statusFilter}`, 14, 36);
 
-doc.save("carbon-emission-report.pdf");
-};
+    doc.autoTable({
+      startY: 45,
+      head: [['Date', 'Type', 'Location', 'Emission (kg)', 'Status']],
+      body: processedData.map(item => [item.date, item.type, item.location, item.emission, item.status]),
+      theme: 'grid',
+      headStyles: { fillColor: [22, 163, 74] },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+    });
+
+    doc.save("carbon-emission-report.pdf");
+  };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className={`p-6 min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Emission Reports</h1>
-          <p className="text-gray-500 mt-1">Manage, filter, and export carbon data</p>
+          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Emission Reports</h1>
+          <p className={`mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Manage, filter, and export carbon data</p>
         </div>
         <button 
           onClick={downloadPDF}
@@ -77,24 +81,24 @@ doc.save("carbon-emission-report.pdf");
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 justify-between">
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-4 rounded-xl shadow-sm border mb-6 flex flex-col md:flex-row gap-4 justify-between`}>
         <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+          <Search className={`absolute left-3 top-2.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} size={20} />
           <input 
             type="text"
             placeholder="Search by location or type..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className={`w-full pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'border border-gray-200'}`}
           />
         </div>
         
         <div className="flex items-center gap-2">
-          <Filter className="text-gray-400" size={20} />
+          <Filter className={isDark ? 'text-gray-500' : 'text-gray-400'} size={20} />
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+            className={`rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${isDark ? 'bg-gray-700 border-gray-600 text-white border' : 'bg-white border border-gray-200'}`}
           >
             <option value="All">All Threat Levels</option>
             <option value="High">High</option>
@@ -104,33 +108,33 @@ doc.save("carbon-emission-report.pdf");
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className={`rounded-xl shadow-sm border overflow-hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="p-4 font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('date')}>
+              <tr className={`border-b ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                <th className={`p-4 font-semibold cursor-pointer transition-colors ${isDark ? 'text-gray-300 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`} onClick={() => handleSort('date')}>
                   <div className="flex items-center gap-1">Date <ArrowUpDown size={14}/></div>
                 </th>
-                <th className="p-4 font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('type')}>
+                <th className={`p-4 font-semibold cursor-pointer transition-colors ${isDark ? 'text-gray-300 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`} onClick={() => handleSort('type')}>
                   <div className="flex items-center gap-1">Source Type <ArrowUpDown size={14}/></div>
                 </th>
-                <th className="p-4 font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('location')}>
+                <th className={`p-4 font-semibold cursor-pointer transition-colors ${isDark ? 'text-gray-300 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`} onClick={() => handleSort('location')}>
                   <div className="flex items-center gap-1">Location <ArrowUpDown size={14}/></div>
                 </th>
-                <th className="p-4 font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('emission')}>
+                <th className={`p-4 font-semibold cursor-pointer transition-colors ${isDark ? 'text-gray-300 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`} onClick={() => handleSort('emission')}>
                   <div className="flex items-center gap-1">Emissions (Tons) <ArrowUpDown size={14}/></div>
                 </th>
-                <th className="p-4 font-semibold text-gray-600">Status</th>
+                <th className={`p-4 font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Status</th>
               </tr>
             </thead>
             <tbody>
               {processedData.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="p-4 text-gray-700">{item.date}</td>
-                  <td className="p-4 font-medium text-gray-800">{item.type}</td>
-                  <td className="p-4 text-gray-600">{item.location}</td>
-                  <td className="p-4 text-gray-700">{item.emission} tCO2e</td>
+                <tr key={item.id} className={`border-b transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-100 hover:bg-gray-50'}`}>
+                  <td className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{item.date}</td>
+                  <td className={`p-4 font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{item.type}</td>
+                  <td className={`p-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{item.location}</td>
+                  <td className={`p-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{item.emission} tCO2e</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 w-max
                       ${item.status === 'High' ? 'bg-red-100 text-red-700' : 
@@ -147,7 +151,7 @@ doc.save("carbon-emission-report.pdf");
           </table>
           
           {processedData.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
+            <div className={`p-8 text-center ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               No emission records found matching your criteria.
             </div>
           )}

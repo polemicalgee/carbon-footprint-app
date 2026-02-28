@@ -6,6 +6,7 @@ import {
   DirectionsRenderer,
   HeatmapLayer,
 } from "@react-google-maps/api";
+import { useTheme } from "../context/ThemeContext";
 
 const containerStyle = {
   width: "100%",
@@ -29,6 +30,7 @@ const emissionFactors = {
 };
 
 function LocationTrackingPage() {
+  const { isDark } = useTheme();
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries: ["places", "visualization"],
@@ -113,78 +115,102 @@ function LocationTrackingPage() {
     );
   }, [currentPosition, destination, vehicle]);
 
-  if (!isLoaded) return <div>Loading Map...</div>;
+  if (!isLoaded) return <div className={isDark ? "text-white" : ""}>Loading Map...</div>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Carbon Location Tracker 🌍</h2>
+    <div className={`min-h-screen p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="max-w-5xl mx-auto">
+        <h2 className={`text-3xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+          Carbon Location Tracker 🌍
+        </h2>
 
-      <button onClick={getLocation}>Share My GPS Location</button>
+        <button
+          onClick={getLocation}
+          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition mb-6"
+        >
+          Share My GPS Location
+        </button>
 
-      <br /><br />
+        <div className={`space-y-4 mb-6 p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              Destination
+            </label>
+            <input
+              type="text"
+              placeholder="Enter destination"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className={`w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'border border-gray-300'}`}
+            />
+          </div>
 
-      <input
-        type="text"
-        placeholder="Enter destination"
-        value={destination}
-        onChange={(e) => setDestination(e.target.value)}
-        style={{ padding: "8px", width: "250px" }}
-      />
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              Transportation Mode
+            </label>
+            <select
+              value={vehicle}
+              onChange={(e) => setVehicle(e.target.value)}
+              className={`w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'border border-gray-300'}`}
+            >
+              <option value="car">🚗 Car</option>
+              <option value="bus">🚌 Bus</option>
+              <option value="motorbike">🛵 Motorbike</option>
+              <option value="suv">🚙 SUV</option>
+              <option value="electric">⚡ Electric Car</option>
+              <option value="bike">🚴 Bicycle</option>
+              <option value="walk">🚶 Walking</option>
+            </select>
+          </div>
 
-      <br /><br />
-
-      <select
-        value={vehicle}
-        onChange={(e) => setVehicle(e.target.value)}
-        style={{ padding: "8px" }}
-      >
-        <option value="car">🚗 Car</option>
-        <option value="bus">🚌 Bus</option>
-        <option value="motorbike">🛵 Motorbike</option>
-        <option value="suv">🚙 SUV</option>
-        <option value="electric">⚡ Electric Car</option>
-        <option value="bike">🚴 Bicycle</option>
-        <option value="walk">🚶 Walking</option>
-      </select>
-
-      <br /><br />
-
-      <button onClick={calculateRoute}>Calculate Route</button>
-
-      <br /><br />
-
-      {distance && (
-        <div style={{ marginBottom: "20px" }}>
-          <p><strong>Distance:</strong> {distance.toFixed(2)} km</p>
-          <p><strong>Vehicle:</strong> {vehicle.toUpperCase()}</p>
-          <p>
-            <strong>Estimated CO₂:</strong> {emissions.toFixed(2)} kg
-          </p>
-          <p>
-            <strong>Carbon Rating:</strong>{" "}
-            {getCarbonRating(emissions)}
-          </p>
+          <button
+            onClick={calculateRoute}
+            className="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
+          >
+            Calculate Route
+          </button>
         </div>
-      )}
 
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={currentPosition || center}
-        zoom={12}
-      >
-        {currentPosition && <Marker position={currentPosition} />}
-        {directions && <DirectionsRenderer directions={directions} />}
-
-        {heatmapData.length > 0 && (
-          <HeatmapLayer
-            data={heatmapData}
-            options={{
-              radius: 30,
-              opacity: 0.6,
-            }}
-          />
+        {distance && (
+          <div className={`mb-6 p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white shadow-md'}`}>
+            <p className={`mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <strong>Distance:</strong> {distance.toFixed(2)} km
+            </p>
+            <p className={`mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <strong>Vehicle:</strong> {vehicle.toUpperCase()}
+            </p>
+            <p className={`mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <strong>Estimated CO₂:</strong> {emissions.toFixed(2)} kg
+            </p>
+            <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+              <strong>Carbon Rating:</strong>{" "}
+              {getCarbonRating(emissions)}
+            </p>
+          </div>
         )}
-      </GoogleMap>
+
+        <div className={`rounded-lg overflow-hidden shadow-lg ${isDark ? 'shadow-black' : ''}`}>
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={currentPosition || center}
+            zoom={12}
+          >
+            {currentPosition && <Marker position={currentPosition} />}
+            {directions && <DirectionsRenderer directions={directions} />}
+
+            {heatmapData.length > 0 && (
+              <HeatmapLayer
+                data={heatmapData}
+                options={{
+                  radius: 30,
+                  opacity: 0.6,
+                }}
+              />
+            )}
+          </GoogleMap>
+        </div>
+      </div>
     </div>
   );
 }
