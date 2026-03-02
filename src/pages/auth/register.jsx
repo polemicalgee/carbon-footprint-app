@@ -22,49 +22,55 @@ const Register = () => {
       [name]: value
     }));
   };
-
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Basic validation
+    
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all fields');
       setLoading(false);
       return;
     }
 
-    if (!formData.email.includes('@')) {
-      setError('Please enter a valid email');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      setLoading(false);
-      return;
-    }
-
+    
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
+  
     try {
-      // Simulated registration - replace with actual API call
-      console.log('Register attempt:', { name: formData.name, email: formData.email });
+      const response = await fetch("http://localhost:5000/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("🟢 Success! User created:", data);
+        
+        navigate('/login'); 
+      } else {
+        
+        setError(data.message || 'Registration failed. Try a different email.');
+      }
       
-      // Store user data and redirect
-      localStorage.setItem('user', JSON.stringify({ name: formData.name, email: formData.email }));
-      navigate('/');
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      console.error("🔴 Backend connection error:", err);
+      setError('Could not connect to the server. Is the backend running?');
     } finally {
       setLoading(false);
     }
@@ -74,7 +80,7 @@ const Register = () => {
     <div className={`flex items-center justify-center min-h-screen ${isDark ? 'bg-gradient-to-br from-gray-800 to-gray-900' : 'bg-gradient-to-br from-green-50 to-blue-50'}`}>
       <div className="w-full max-w-md">
         <div className={`${isDark ? 'bg-gray-800 shadow-2xl shadow-black' : 'bg-white shadow-lg'} rounded-lg p-8`}>
-          {/* Header */}
+        
           <div className="mb-8">
             <h1 className="text-4xl font-black text-green-600 tracking-tight mb-2">
               CarbonWise<span className="text-green-400">.</span>
@@ -82,7 +88,7 @@ const Register = () => {
             <p className={isDark ? "text-gray-400" : "text-gray-600"}>Create an account to get started</p>
           </div>
 
-          {/* Error Message */}
+         
           {error && (
             <div className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${isDark ? 'bg-red-900 bg-opacity-20 border border-red-800' : 'bg-red-50 border border-red-200'}`}>
               <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
@@ -90,9 +96,9 @@ const Register = () => {
             </div>
           )}
 
-          {/* Form */}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Input */}
+          
             <div>
               <label htmlFor="name" className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Full Name
@@ -111,7 +117,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Email Input */}
+            
             <div>
               <label htmlFor="email" className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Email Address
@@ -130,7 +136,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Password Input */}
+           
             <div>
               <label htmlFor="password" className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Password
@@ -149,7 +155,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Confirm Password Input */}
             <div>
               <label htmlFor="confirmPassword" className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Confirm Password
@@ -168,7 +173,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
+         
             <button
               type="submit"
               disabled={loading}
@@ -178,7 +183,7 @@ const Register = () => {
             </button>
           </form>
 
-          {/* Divider */}
+        
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className={`w-full border-t ${isDark ? 'border-gray-700' : 'border-gray-300'}`}></div>
@@ -188,7 +193,7 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Login Link */}
+          
           <p className={isDark ? "text-center text-gray-400" : "text-center text-gray-600"}>
             Already have an account?{' '}
             <button
