@@ -1,3 +1,8 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import Emissions from "./pages/Emissions";
+import Analytics from "./pages/Analytics";
+import Reports from "./pages/Reports";
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
@@ -110,6 +115,12 @@ function App() {
   
   return (
     <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/emissions" element={<Emissions />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/reports" element={<Reports />} />
+      </Routes>
       <React.Suspense fallback={<PageLoader />}>
         <div className={`flex min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} font-sans`}>
           <Sidebar />

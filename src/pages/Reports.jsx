@@ -1,3 +1,5 @@
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 import React, { useState, useMemo } from 'react';
 import { FileText, Download, Filter, AlertCircle, CheckCircle, Search, ArrowUpDown } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -64,7 +66,19 @@ const Reports = () => {
     doc.save("carbon-emission-report.pdf");
   };
 
+function Reports() {
   return (
+    <div className="flex h-screen">
+      <Sidebar />
+
+      <div className="flex-1 bg-gray-100 flex flex-col">
+        <Navbar />
+
+        <div className="p-8">
+          <h2 className="text-2xl font-bold">Reports Page</h2>
+          <p className="text-gray-600 mt-2">
+            Download emission reports and history here.
+          </p>
     <div className={`p-6 min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       
       <div className="flex justify-between items-center mb-8">
@@ -159,6 +173,6 @@ const Reports = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Reports;
