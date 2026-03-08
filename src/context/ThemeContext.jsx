@@ -5,7 +5,7 @@ const ThemeContext = createContext();
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(false);
 
-  // Initialize theme from localStorage
+  
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -17,7 +17,7 @@ export const ThemeProvider = ({ children }) => {
     }
   }, []);
 
-  // Update DOM and localStorage when theme changes
+  
   useEffect(() => {
     const htmlElement = document.documentElement;
     if (isDark) {

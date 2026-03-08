@@ -1,36 +1,36 @@
 import React, { useState } from 'react';
-import { Zap, Circle, CheckCircle2 } from 'lucide-react';
+import { Factory, Circle, Activity } from 'lucide-react';
 
-const Vehicle = () => {
-  const [vehicleType, setVehicleType] = useState('Petrol');
-  const [distance, setDistance] = useState(100);
+const Industrial = () => {
+  const [powerSource, setPowerSource] = useState('Grid Average');
+  const [consumption, setConsumption] = useState(5000);
   const [status, setStatus] = useState('');
 
-  // Emission factors (grams of CO2 per km)
+  // Emission factors (kg of CO2 per kWh)
   const emissionFactors = {
-    Petrol: 192,
-    Diesel: 232,
-    Hybrid: 109,
-    Electric: 0
+    'Coal Power': 1.00,
+    'Grid Average': 0.45,
+    'Natural Gas': 0.40,
+    'Renewable (Solar/Wind)': 0.00
   };
 
-  const currentFactor = emissionFactors[vehicleType];
+  const currentFactor = emissionFactors[powerSource];
   
-  // Calculate total in kg (Distance * Factor / 1000)
-  const totalEmissions = ((distance * currentFactor) / 1000).toFixed(2);
+  // Calculate total in kg (Consumption * Factor)
+  const totalEmissions = (consumption * currentFactor).toFixed(2);
 
-  // Dynamic status based on emissions
+  // Dynamic status based on industrial emissions scale
   const getEmissionLevel = () => {
-    if (totalEmissions <= 50) return { label: 'Low Emission', color: 'text-green-500', border: 'border-green-400', bg: 'bg-green-50' };
-    if (totalEmissions <= 100) return { label: 'Moderate Emission', color: 'text-orange-500', border: 'border-orange-400', bg: 'bg-orange-50' };
+    if (totalEmissions <= 1000) return { label: 'Optimal/Low Emission', color: 'text-green-500', border: 'border-green-400', bg: 'bg-green-50' };
+    if (totalEmissions <= 5000) return { label: 'Moderate Emission', color: 'text-orange-500', border: 'border-orange-400', bg: 'bg-orange-50' };
     return { label: 'High Emission', color: 'text-red-500', border: 'border-red-400', bg: 'bg-red-50' };
   };
 
   const level = getEmissionLevel();
 
-  // Fun stats
+  // Fun stats for context
+  const homesPowered = Math.round(consumption / 30); // Avg home uses ~30 kWh/day
   const treesToOffset = Math.max(1, Math.round(totalEmissions / 20));
-  const kwhEquivalent = (totalEmissions * 2.5).toFixed(1);
 
   // The Bridge: Save to your Neon Database
   const handleSave = async (e) => {
@@ -49,13 +49,13 @@ const Vehicle = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: storedUser.id,
-          activity_type: `${vehicleType} Vehicle Travel`,
+          activity_type: `Industrial (${powerSource})`,
           emissions: Number(totalEmissions)
         }),
       });
 
       if (response.ok) {
-        setStatus('✅ Trip saved to dashboard!');
+        setStatus('✅ Logged to dashboard successfully!');
       } else {
         setStatus('❌ Failed to save.');
       }
@@ -63,7 +63,6 @@ const Vehicle = () => {
       setStatus('❌ Server connection error.');
     }
     
-    // Clear status message after 3 seconds
     setTimeout(() => setStatus(''), 3000);
   };
 
@@ -73,10 +72,10 @@ const Vehicle = () => {
       {/* Header Section */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-sm mb-4 border border-gray-100">
-          <Zap className="text-[#00a650]" size={32} />
+          <Factory className="text-[#00a650]" size={32} />
         </div>
-        <h1 className="text-3xl font-extrabold text-gray-900">Vehicle Carbon Emission Calculator</h1>
-        <p className="text-gray-500 mt-2">Calculate your vehicle's carbon footprint and discover ways to reduce your environmental impact.</p>
+        <h1 className="text-3xl font-extrabold text-gray-900">Industrial Carbon Emission Calculator</h1>
+        <p className="text-gray-500 mt-2">Track facility energy usage and optimize your corporate environmental impact.</p>
       </div>
 
       {/* Main Card */}
@@ -88,25 +87,25 @@ const Vehicle = () => {
           <div>
             <form onSubmit={handleSave} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Primary Energy Source</label>
                 <select 
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
+                  value={powerSource}
+                  onChange={(e) => setPowerSource(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none bg-white"
                 >
-                  <option value="Petrol">Petrol</option>
-                  <option value="Diesel">Diesel</option>
-                  <option value="Hybrid">Hybrid</option>
-                  <option value="Electric">Electric</option>
+                  <option value="Grid Average">Grid Average</option>
+                  <option value="Coal Power">Coal Power</option>
+                  <option value="Natural Gas">Natural Gas</option>
+                  <option value="Renewable (Solar/Wind)">Renewable (Solar/Wind)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Distance (km)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Energy Consumption (kWh)</label>
                 <input 
                   type="number" 
-                  value={distance}
-                  onChange={(e) => setDistance(e.target.value)}
+                  value={consumption}
+                  onChange={(e) => setConsumption(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none"
                   min="0"
                 />
@@ -116,19 +115,19 @@ const Vehicle = () => {
               <div className="pt-2">
                 <div className="flex justify-between text-sm text-gray-500 mb-2">
                   <span>Emission Factor</span>
-                  <span className="font-semibold text-gray-700">{currentFactor} g CO₂/km</span>
+                  <span className="font-semibold text-gray-700">{currentFactor.toFixed(2)} kg CO₂/kWh</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-red-500 h-2.5 rounded-full" style={{ width: `${(currentFactor / 250) * 100}%` }}></div>
+                  <div className="bg-purple-500 h-2.5 rounded-full" style={{ width: `${(currentFactor / 1.0) * 100}%` }}></div>
                 </div>
               </div>
 
-              {/* Save Button (Added so it functions for the demo!) */}
+              {/* Save Button */}
               <button 
                 type="submit" 
                 className="w-full bg-[#00a650] hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors shadow-sm mt-4 flex justify-center items-center gap-2"
               >
-                Log Trip to Dashboard
+                Log Facility Data to Dashboard
               </button>
               
               {/* Success/Error Message */}
@@ -141,34 +140,26 @@ const Vehicle = () => {
             
             {/* Total Display */}
             <div className={`p-8 rounded-xl border-2 flex flex-col items-center justify-center text-center transition-colors ${level.border} ${level.bg}`}>
-              <p className="text-gray-600 font-medium mb-2">Total CO₂ Emissions</p>
+              <p className="text-gray-600 font-medium mb-2">Facility CO₂ Emissions</p>
               <h2 className="text-5xl font-black text-gray-900 mb-2">
                 {totalEmissions} <span className="text-2xl font-semibold text-gray-500">kg</span>
               </h2>
               <p className={`font-bold ${level.color}`}>{level.label}</p>
             </div>
 
-            {/* Emission Scale Legend */}
-            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Emission Level Scale</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-center gap-2"><Circle className="text-green-500 fill-current" size={12}/> 0-50 kg: Low</li>
-                <li className="flex items-center gap-2"><Circle className="text-orange-500 fill-current" size={12}/> 51-100 kg: Moderate</li>
-                <li className="flex items-center gap-2"><Circle className="text-red-500 fill-current" size={12}/> 101+ kg: High</li>
-              </ul>
-            </div>
-
             {/* Equivalency Cards */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="border border-gray-200 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Trees to Offset</p>
-                <h3 className="text-2xl font-black text-gray-900">{treesToOffset}</h3>
-                <p className="text-xs text-gray-400">trees/year</p>
+              <div className="border border-gray-200 rounded-xl p-4 text-center bg-gray-50">
+                <Activity className="text-blue-500 mx-auto mb-2" size={24} />
+                <p className="text-xs text-gray-500 mb-1">Energy Equivalent</p>
+                <h3 className="text-xl font-black text-gray-900">{homesPowered}</h3>
+                <p className="text-xs text-gray-400">Homes powered/day</p>
               </div>
-              <div className="border border-gray-200 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Equivalent to</p>
-                <h3 className="text-2xl font-black text-gray-900">{kwhEquivalent}</h3>
-                <p className="text-xs text-gray-400">kWh electricity</p>
+              <div className="border border-gray-200 rounded-xl p-4 text-center bg-gray-50">
+                <Factory className="text-purple-500 mx-auto mb-2" size={24} />
+                <p className="text-xs text-gray-500 mb-1">Annual Offset</p>
+                <h3 className="text-xl font-black text-gray-900">{treesToOffset}</h3>
+                <p className="text-xs text-gray-400">Trees required</p>
               </div>
             </div>
 
@@ -178,19 +169,19 @@ const Vehicle = () => {
         {/* Recommendations Section */}
         <div className="mt-12 pt-8 border-t border-gray-100">
           <div className="flex items-center gap-2 mb-6">
-            <Zap className="text-[#00a650]" size={24} />
-            <h3 className="text-lg font-bold text-gray-900">Reduction Recommendations</h3>
+            <Factory className="text-[#00a650]" size={24} />
+            <h3 className="text-lg font-bold text-gray-900">Industrial Reduction Strategies</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              "Consider switching to an electric or hybrid vehicle.",
-              "Combine trips to reduce total distance traveled.",
-              "Maintain proper tire pressure for better fuel efficiency.",
-              "Use public transportation or carpool when possible."
+              "Upgrade to high-efficiency industrial LED lighting systems.",
+              "Implement smart-grid technology for peak load management.",
+              "Transition a percentage of facility power to on-site solar.",
+              "Perform routine maintenance on heavy machinery to optimize energy draw."
             ].map((tip, idx) => (
               <div key={idx} className="p-4 border border-gray-200 rounded-lg flex items-start gap-3 bg-gray-50 hover:bg-white transition-colors">
-                <span className="text-gray-400 mt-0.5">•</span>
+                <span className="text-[#00a650] font-bold mt-0.5">•</span>
                 <p className="text-sm text-gray-600">{tip}</p>
               </div>
             ))}
@@ -198,13 +189,8 @@ const Vehicle = () => {
         </div>
 
       </div>
-      
-      <p className="text-center text-xs text-gray-400 mt-8">
-        Emission factors are approximate averages. Actual emissions may vary based on driving conditions and vehicle efficiency.
-      </p>
-
     </div>
   );
 };
 
-export default Vehicle;
+export default Industrial;
