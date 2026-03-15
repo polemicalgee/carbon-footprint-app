@@ -167,6 +167,38 @@ app.put('/api/reports/:id', async (req, res) => {
     res.status(500).send("Server Error: Could not update report");
   }
 });
+const { spawn } = require('child_process');
+app.post('/api/predict-emissions', (req, res) => {
+    const { engineSize, cylinders, fuelConsumption } = req.body;
+    const pythonProcess = spawn('python', ['predict.py', engineSize, cylinders, fuelConsumption]);
+
+    let output = '';
+
+    // 1. Collect all data from Python
+    pythonProcess.stdout.on('data', (data) => {
+        output += data.toString();
+    });
+
+    // 2. Log warnings to the terminal, but DO NOT crash the server
+    pythonProcess.stderr.on('data', (data) => {
+        console.warn(`Python Warning (Ignored): ${data}`); 
+    });
+
+    // 3. When Python is completely finished, send the response
+    pythonProcess.on('close', (code) => {
+        // Grab only the very last line printed by Python (the actual number)
+        const cleanOutput = output.trim().split('\n').pop();
+        const predictedCO2 = parseFloat(cleanOutput);
+
+        if (isNaN(predictedCO2)) {
+            return res.status(500).json({ success: false, message: "Could not read AI output." });
+        }
+
+        res.json({ success: true, predicted_emission: predictedCO2 });
+    });
+});
+
+
 app.listen(port, () => {
   console.log(`🚀 Server is running on http://localhost:${port}`);
 });
