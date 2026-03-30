@@ -1,7 +1,7 @@
 AI-Based Carbon Footprint Monitoring & Prediction System (CarbonWise)
-​🌍 Overview
+​🌍Overview
 ​CarbonWise is an intelligent enterprise system designed to monitor, predict, and reduce carbon emissions for organizations of all sizes. By combining IoT sensor data, GPS tracking, and advanced machine learning, the platform provides real-time analytics and actionable intelligence to combat rapid climate change.
-​🚀 Key Features
+​ Key Features
 ​Dual-Model RF + CNN Ensemble: High-accuracy CO_2 prediction using Random Forest and Convolutional Neural Networks.
 ​30-Day AI Forecast: Utilizes MLP neural networks to predict future emission trends.
 ​Real-Time Kenya Heatmap: Live gradient mapping of CO_2 levels across 14 Kenyan cities using the WAQI API.
