@@ -13,6 +13,7 @@ const Vehicle = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState({ text: '', type: '' });
   const [anomaly, setAnomaly] = useState(null);
+  const [modelDetails, setModelDetails] = useState(null);
   const user = getUser();
 
   const emissionFactors = { Petrol: 192, Diesel: 232, Hybrid: 109, Electric: 47 };
@@ -53,8 +54,14 @@ const Vehicle = () => {
 
       if (data.success) {
         setAiPrediction(data.predicted_emission);
-        const source = data.fallback ? 'Physics formula (ML service offline)' : 'Random Forest AI';
-        setStatus({ text: `✅ Prediction: ${data.predicted_emission.toFixed(1)} g CO₂/km — ${source}`, type: 'success' });
+        setModelDetails(data);
+        const sourceLabel = {
+          'rf_cnn_ensemble': 'RF + CNN Ensemble',
+          'random_forest_only': 'Random Forest',
+          'cnn_only': '1D CNN',
+          'physics_fallback': 'Physics formula'
+        }[data.source] || data.source;
+        setStatus({ text: `✅ ${data.predicted_emission.toFixed(1)} g CO₂/km — ${sourceLabel}`, type: 'success' });
       } else {
         setStatus({ text: '❌ AI prediction failed. Using static values.', type: 'error' });
       }
@@ -81,6 +88,7 @@ const Vehicle = () => {
 
       if (res?.ok) {
         setStatus({ text: '✅ Trip saved to dashboard!', type: 'success' });
+        // Check anomaly against last 10 reports
         checkAnomaly(Number(totalEmissions));
       } else {
         setStatus({ text: '❌ Failed to save.', type: 'error' });
@@ -121,6 +129,7 @@ const Vehicle = () => {
         <p className="text-gray-500 mt-1 text-sm">Calculate your vehicle's carbon footprint using our Random Forest AI model.</p>
       </div>
 
+      {/* Anomaly Alert */}
       {anomaly && (
         <div className="max-w-5xl mx-auto mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
           <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
@@ -134,7 +143,10 @@ const Vehicle = () => {
 
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+          {/* Left: Inputs */}
           <div className="space-y-6">
+            {/* AI Parameters */}
             <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-4">
               <h3 className="font-bold text-emerald-800 text-xs uppercase tracking-wide">Step 1 — AI Analysis Parameters</h3>
 
@@ -168,6 +180,7 @@ const Vehicle = () => {
               </button>
             </div>
 
+            {/* Vehicle Type & Distance */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
               <div className="grid grid-cols-4 gap-2">
@@ -206,6 +219,8 @@ const Vehicle = () => {
               </p>
             )}
           </div>
+
+          {/* Right: Results */}
           <div className="space-y-5">
             <div className={`p-8 rounded-xl border-2 flex flex-col items-center justify-center text-center transition-colors ${level.border} ${level.bg}`}>
               <p className="text-gray-500 font-medium mb-2 text-sm">Total CO₂ Emissions</p>
@@ -237,13 +252,60 @@ const Vehicle = () => {
               </div>
             </div>
 
-            {aiPrediction !== null && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-1">
+            {aiPrediction !== null && modelDetails && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
                   <CheckCircle2 className="text-emerald-600" size={16} />
-                  <p className="text-sm font-bold text-emerald-800">AI Prediction Active</p>
+                  <p className="text-sm font-bold text-emerald-800">
+                    {modelDetails.source === 'rf_cnn_ensemble' ? 'RF + CNN Ensemble Active' : 'AI Prediction Active'}
+                  </p>
                 </div>
-                <p className="text-xs text-emerald-700">Using Random Forest model output instead of static factor. This prediction accounts for your specific engine characteristics.</p>
+
+                {/* Model predictions breakdown */}
+                {modelDetails.model_predictions && Object.keys(modelDetails.model_predictions).length > 1 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Individual model outputs:</p>
+                    {Object.entries(modelDetails.model_predictions).map(([model, val]) => {
+                      const label = model === 'random_forest' ? 'Random Forest' : '1D CNN';
+                      const weight = modelDetails.ensemble_weights?.[model === 'random_forest' ? 'random_forest' : 'cnn_1d'];
+                      return (
+                        <div key={model} className="flex items-center gap-2">
+                          <span className="text-xs text-emerald-700 w-28">{label}</span>
+                          <div className="flex-1 bg-emerald-100 rounded-full h-1.5">
+                            <div className="bg-emerald-500 h-1.5 rounded-full"
+                              style={{ width: `${(val / 400) * 100}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-emerald-800 w-16 text-right">{val} g/km</span>
+                          {weight !== undefined && (
+                            <span className="text-xs text-emerald-500 w-10">({(weight * 100).toFixed(0)}%)</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Model agreement */}
+                {modelDetails.agreement && modelDetails.agreement.diff_pct !== null && (
+                  <p className="text-xs text-emerald-700">
+                    Model agreement: <span className="font-bold capitalize">{modelDetails.agreement.status}</span>
+                    {' '}({modelDetails.agreement.diff_pct}% difference between models)
+                  </p>
+                )}
+
+                {/* Feature importance */}
+                {modelDetails.feature_importance && Object.keys(modelDetails.feature_importance).length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Feature importance (RF):</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {Object.entries(modelDetails.feature_importance).map(([feat, pct]) => (
+                        <span key={feat} className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">
+                          {feat}: {pct}%
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
