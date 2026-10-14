@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 
 const Register = () => {
@@ -8,6 +8,10 @@ const Register = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const accountType = searchParams.get('type');
+
+  if (!['individual', 'organisation'].includes(accountType)) return <Navigate to="/auth" replace />;
 
   const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -36,12 +40,12 @@ const Register = () => {
       const response = await fetch('http://localhost:5000/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password })
+        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password, accountType })
       });
       const data = await response.json();
       if (response.ok) {
         setSuccess('Account created! Redirecting to login...');
-        setTimeout(() => navigate('/login'), 1500);
+        setTimeout(() => navigate(`/login?type=${accountType}`), 1500);
       } else {
         setError(data.message || 'Registration failed');
       }
@@ -80,11 +84,11 @@ const Register = () => {
               { label: 'Email address', name: 'email', type: 'email', icon: Mail, placeholder: 'you@example.com' },
               { label: 'Password', name: 'password', type: 'password', icon: Lock, placeholder: 'Min. 6 characters' },
               { label: 'Confirm password', name: 'confirmPassword', type: 'password', icon: Lock, placeholder: 'Repeat password' }
-            ].map(({ label, name, type, icon: Icon, placeholder }) => (
+            ].map(({ label, name, type, icon, placeholder }) => (
               <div key={name}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
                 <div className="relative">
-                  <Icon className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  {React.createElement(icon, { className: 'absolute left-3 top-3 w-5 h-5 text-gray-400' })}
                   <input
                     type={type}
                     name={name}
@@ -108,10 +112,13 @@ const Register = () => {
 
           <p className="text-center text-gray-600 text-sm mt-5">
             Already have an account?{' '}
-            <button onClick={() => navigate('/login')} className="text-[#00a650] hover:text-green-700 font-semibold">
+            <button onClick={() => navigate(`/login?type=${accountType}`)} className="text-[#00a650] hover:text-green-700 font-semibold">
               Sign in
             </button>
           </p>
+          <button onClick={() => navigate('/auth')} className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700">
+            Change account type
+          </button>
         </div>
       </div>
     </div>

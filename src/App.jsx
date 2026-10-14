@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Map, Car, Factory, FileText, BarChart2, Sun, Moon, LogOut } from 'lucide-react';
 import { useTheme } from './context/ThemeContext';
-import { logout } from './utils/api';
+import { getUser, logout } from './utils/api';
 
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const Vehicle = React.lazy(() => import('./pages/Vehicle'));
@@ -12,26 +12,33 @@ const Analytics = React.lazy(() => import('./pages/Analytics'));
 const Location = React.lazy(() => import('./pages/LocationTrackingPage'));
 const Login = React.lazy(() => import('./pages/auth/login'));
 const Register = React.lazy(() => import('./pages/auth/register'));
+const AuthChoice = React.lazy(() => import('./pages/auth/choice'));
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedAccountTypes }) => {
   const token = localStorage.getItem('token');
   if (!token) return <Navigate to="/login" replace />;
+  const accountType = getUser()?.accountType || 'individual';
+  if (allowedAccountTypes && !allowedAccountTypes.includes(accountType)) {
+    return <Navigate to="/dashboard" replace />;
+  }
   return children;
 };
 
 const SidebarLayout = ({ children }) => {
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
-  const isAuthPage = ['/login', '/register'].includes(location.pathname);
+  const isAuthPage = ['/auth', '/login', '/register'].includes(location.pathname);
+  const accountType = getUser()?.accountType || 'individual';
 
-  const navItems = [
+  const allNavItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/analytics', label: 'Analytics', icon: BarChart2 },
-    { path: '/location', label: 'Location Tracking', icon: Map },
-    { path: '/vehicle', label: 'Vehicle Emission', icon: Car },
-    { path: '/industrial', label: 'Industrial', icon: Factory },
+    { path: '/location', label: 'Location Tracking', icon: Map, accountTypes: ['individual'] },
+    { path: '/vehicle', label: 'Vehicle Emission', icon: Car, accountTypes: ['individual'] },
+    { path: '/industrial', label: 'Industrial', icon: Factory, accountTypes: ['organisation'] },
     { path: '/reports', label: 'Reports', icon: FileText },
   ];
+  const navItems = allNavItems.filter(item => !item.accountTypes || item.accountTypes.includes(accountType));
 
   if (isAuthPage) return <>{children}</>;
 
@@ -102,16 +109,17 @@ const App = () => (
         </div>
       }>
         <Routes>
+          <Route path="/auth" element={<AuthChoice />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/auth" replace />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/vehicle" element={<ProtectedRoute><Vehicle /></ProtectedRoute>} />
-          <Route path="/industrial" element={<ProtectedRoute><Industrial /></ProtectedRoute>} />
+          <Route path="/vehicle" element={<ProtectedRoute allowedAccountTypes={['individual']}><Vehicle /></ProtectedRoute>} />
+          <Route path="/industrial" element={<ProtectedRoute allowedAccountTypes={['organisation']}><Industrial /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-          <Route path="/location" element={<ProtectedRoute><Location /></ProtectedRoute>} />
+          <Route path="/location" element={<ProtectedRoute allowedAccountTypes={['individual']}><Location /></ProtectedRoute>} />
         </Routes>
       </Suspense>
     </SidebarLayout>

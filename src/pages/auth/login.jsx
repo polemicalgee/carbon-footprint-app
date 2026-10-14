@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 
 const Login = () => {
@@ -8,6 +8,10 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const accountType = searchParams.get('type');
+
+  if (!['individual', 'organisation'].includes(accountType)) return <Navigate to="/auth" replace />;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +28,7 @@ const Login = () => {
       const response = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, accountType })
       });
 
       const data = await response.json();
@@ -36,13 +40,14 @@ const Login = () => {
           id: data.id,
           name: data.name,
           email: data.email,
-          role: data.role
+          role: data.role,
+          accountType: data.accountType
         }));
         navigate('/dashboard');
       } else {
         setError(data.message || 'Invalid email or password');
       }
-    } catch (err) {
+    } catch {
       setError('Could not connect to server. Is the backend running?');
     } finally {
       setLoading(false);
@@ -116,10 +121,13 @@ const Login = () => {
 
           <p className="text-center text-gray-600 text-sm">
             Don't have an account?{' '}
-            <button onClick={() => navigate('/register')} className="text-[#00a650] hover:text-green-700 font-semibold">
+            <button onClick={() => navigate(`/register?type=${accountType}`)} className="text-[#00a650] hover:text-green-700 font-semibold">
               Sign up
             </button>
           </p>
+          <button onClick={() => navigate('/auth')} className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700">
+            Change account type
+          </button>
         </div>
       </div>
     </div>

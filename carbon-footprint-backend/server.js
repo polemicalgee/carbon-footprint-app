@@ -45,7 +45,9 @@ app.get('/', (req, res) => res.json({ status: 'CarbonWise API is online', versio
 
 app.post('/api/users', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, accountType } = req.body;
+    if (!['individual', 'organisation'].includes(accountType))
+      return res.status(400).json({ message: 'Choose an individual or organisation account' });
     if (!name || !email || !password)
       return res.status(400).json({ message: 'Name, email and password are required' });
     if (!email.includes('@'))
@@ -59,8 +61,8 @@ app.post('/api/users', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await pool.query(
-      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-      [name.trim(), email.toLowerCase(), hashedPassword, 'user']
+      'INSERT INTO users (name, email, password, role, account_type) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, account_type',
+      [name.trim(), email.toLowerCase(), hashedPassword, 'user', accountType]
     );
     res.status(201).json({ message: 'Account created successfully', user: newUser.rows[0] });
   } catch (err) {
@@ -71,7 +73,9 @@ app.post('/api/users', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, accountType } = req.body;
+    if (!['individual', 'organisation'].includes(accountType))
+      return res.status(400).json({ message: 'Choose an individual or organisation account' });
     if (!email || !password)
       return res.status(400).json({ message: 'Email and password are required' });
 
@@ -80,6 +84,8 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
 
     const user = result.rows[0];
+    if ((user.account_type || 'individual') !== accountType)
+      return res.status(401).json({ message: 'This email is not registered as that account type' });
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword)
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -91,7 +97,8 @@ app.post('/api/login', async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role || 'user'
+      role: user.role || 'user',
+      accountType: user.account_type || 'individual'
     });
   } catch (err) {
     console.error('Login error:', err.message);
